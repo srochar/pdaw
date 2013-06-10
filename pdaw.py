@@ -14,19 +14,13 @@ class LoginException(Exception):
     def __init__(self, msg):
         self.value = msg
 
-
-
     def __str__(self):
         return repr(self.value)
 
 
-
-
 class Dirdoc(object):
-
     def reconnect(self):
         self.__login()
-
 
 
     def __isloggedIn(self):
@@ -35,7 +29,6 @@ class Dirdoc(object):
         else:
             return False
         return 'PROBLEMAS ARANCELARIOS' in r.text
-
 
 
     def __login(self):
@@ -56,11 +49,10 @@ class Dirdoc(object):
                 self.__cookie = r.cookies
 
 
-
     def __init__(self, rut, password, ua = None, cookie = None):
         self.__urls = {}
         self.__urls['login'] = 'http://postulacion.utem.cl/valida.php'
-        self.__urls['ramos'] = 'http://postulacion.utem.cl/alumnos/notas_anterior.php'
+        self.__urls['ramos'] = 'http://postulacion.utem.cl/alumnos/notas.php'
         self.__urls['notas'] = 'http://postulacion.utem.cl/alumnos/acta.php'
         self.__urls['checker'] = 'http://postulacion.utem.cl/alumnos/contacto.php'
         self.__encoding = 'utf-8'
@@ -82,7 +74,6 @@ class Dirdoc(object):
                 self.__login()
 
 
-
     def __getInfo(self):
         loggeado = self.__isloggedIn()
         encoding = self.__encoding
@@ -94,7 +85,6 @@ class Dirdoc(object):
         rut = pagina.table.find_all('td')[2].getText().encode(encoding)
         nombre = pagina.table.find_all('td')[3].getText().encode(encoding)
         return (rut, nombre)
-
 
 
     def __getRamos(self):
@@ -120,7 +110,6 @@ class Dirdoc(object):
             ramos[codigo] = ramo
 
         return ramos
-
 
 
     def __getNotas(self, link_id):
@@ -150,8 +139,9 @@ class Dirdoc(object):
                         notas['Nota {}'.format(contador_notas)] = nota
                         contador_notas += 1
             elif 'Examen' in head.getText().encode(encoding):
-                notas['Examen {}'.format(contador_examenes)] = nota
-                contador_examenes += 1
+                if nota['nota'] is not None:
+                    notas['Examen {}'.format(contador_examenes)] = nota
+                    contador_examenes += 1
             elif 'Nota Prest' in head.getText().encode(encoding):
                 notas['Nota Presentacion'] = nota
             else:
@@ -164,6 +154,6 @@ class Dirdoc(object):
     ramos = property(fget=__getRamos)
 
 
-+++ okay decompyling pdaw.pyc 
+# +++ okay decompyling pdaw.pyc 
 # decompiled 1 files: 1 okay, 0 failed, 0 verify failed
 # 2013.06.09 23:01:29 CLT
