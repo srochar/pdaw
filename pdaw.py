@@ -142,11 +142,9 @@ class Dirdoc(object):
                 if nota['nota'] is not None:
                     notas['Examen {}'.format(contador_examenes)] = nota
                     contador_examenes += 1
-            elif 'Nota Prest' in head.getText().encode(encoding):
-                notas['Nota Presentacion'] = nota
-            else:
+            elif 'Nota Final' in head.getText().encode(encoding):
                 notas['Nota Final'] = nota
-
+        
         return notas
 
 
