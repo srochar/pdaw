@@ -3,7 +3,7 @@
 """
 Created on 08/06/2013
 
-@author: srocha
+@author: srochar
 @author: pperez
 """
 
@@ -46,7 +46,8 @@ class Dirdoc(object):
             login = 'http://postulacion.utem.cl/valida.php', # Valida rut/password/tipo contra dirdoc
             ramos = 'http://postulacion.utem.cl/alumnos/notas.php', # Muestra los ramos tomados por el estudiante
             checker = 'http://postulacion.utem.cl/alumnos/contacto.php', # URL para validar si estamos loggeados, parece livianita ...
-            notas = 'http://postulacion.utem.cl/alumnos/acta.php' # URL donde se ven las notas, recibe el link del ramo como parametro
+            notas = 'http://postulacion.utem.cl/alumnos/acta.php', # URL donde se ven las notas, recibe el link del ramo como parametro
+            avance = 'http://postulacion.utem.cl/alumnos/curricular_carrera.php' # URL donde se obtiene las carreras por estudiante
         )
         self.__encoding = 'utf-8'
         self.__logindata = dict(
@@ -154,6 +155,55 @@ class Dirdoc(object):
         
         return notas
     
+    
+    def __getAvance(self):
+        loggeado = self.__isloggedIn()
+        if not loggeado:
+            self.__login()
+        url = self.__urls['avance']
+        
+        req = requests.get(url, cookies=self.__cookie, headers = self.__headers)
+        html = BeautifulSoup(req.text)
+        
+        link_malla = html.find_all('table')[1].find_all('tr')[-1].find('td').a.get('href')
+        #self.__urls['malla'] = link_malla
+        
+        link_malla = str('http://postulacion.utem.cl/alumnos/')+link_malla
+        req = requests.get(link_malla, cookies=self.__cookie, headers = self.__headers)
+        html = BeautifulSoup(req.text)
+        
+        listaRamos = html.find_all('table')[2].find_all('tr',class_='datos_izq')
+        
+        aprobados = []
+        inscritos = []
+        noaprobados = []
+        reprobados = []
+        
+        for ramo in listaRamos:
+            #se puede obtener más información, hay que hacer filtro por td nomas
+            nombreRamo = ramo.find_all('td')[1].text
+            estadoRamo = ramo.find_all('td')[4].text
+            if 'APRO' in estadoRamo:
+                l = aprobados
+            elif 'NO INS' in estadoRamo:
+                l = noaprobados
+            elif 'REPROBA' in estadoRamo:
+                l = reprobados
+            elif 'INSCR' in estadoRamo:
+                l = inscritos
+            l.append(nombreRamo)
+        
+        totalRamos = len(listaRamos)
+        totalAprob = len(aprobados)
+        
+        avance = {}
+        avance['aprobados'] = aprobados; avance['inscritos'] = inscritos; avance['reprobados'] = reprobados; avance['faltantes'] = noaprobados;
+        avance['porcentaje'] = 100*totalAprob/totalRamos
+        return avance
+                
+        
+    
     # Propiedades de la clase
     info = property(fget=__getInfo)
     ramos = property(fget=__getRamos)
+    avance = property(fget=__getAvance)
